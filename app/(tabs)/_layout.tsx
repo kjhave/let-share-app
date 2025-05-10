@@ -1,12 +1,25 @@
 import { Tabs } from "expo-router";
+import { SlideTabBar, type TabItem } from "@/components/SlideTabBar";
+
+const tabItems: TabItem[] = [
+    { name: "home/index", icon: "home", label: "Home" },
+    { name: "friends/index", icon: "users", label: "Friends" },
+    { name: "groups/index", icon: "layers", label: "Groups" },
+    { name: "profile/index", icon: "user", label: "Profile" },
+];
 
 export default function TabLayout() {
     return (
-        <Tabs screenOptions={{ headerShown: false }}>
-            <Tabs.Screen name="home/index" options={{ title: "Home" }} />
-            <Tabs.Screen name="friends/index" options={{ title: "Friends" }} />
-            <Tabs.Screen name="groups/index" options={{ title: "Groups" }} />
-            <Tabs.Screen name="profile/index" options={{ title: "Profile" }} />
+        <Tabs
+            tabBar={(props) => <SlideTabBar {...props} tabs={tabItems} />}
+            screenOptions={{
+                headerShown: false,
+                animation: "fade"
+            }}
+        >
+            {tabItems.map((item) => (
+                <Tabs.Screen key={item.name} name={item.name} options={{ title: item.label }} />
+            ))}
         </Tabs>
     );
 }
