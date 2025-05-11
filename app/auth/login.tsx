@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { View, Text, TextInput, Pressable, TouchableOpacity } from "react-native";
-import { saveSecurely } from "@/utils/storage";
+import { loginUser } from "@/services/auth";
 
 export default function LoginScreen() {
     const [username, setUsername] = useState("");
@@ -10,7 +10,10 @@ export default function LoginScreen() {
 
     const handleLogin = async () => {
         console.log("Login pressed", username, password);
-        await saveSecurely("access_token", username);
+        await loginUser({
+            username: username,
+            password: password,
+        });
         route.replace("/");
     };
 

@@ -20,12 +20,11 @@ export default function SignupScreen() {
                 email: email,
                 password: password,
             });
+            route.back();
         } catch (error) {
             console.error("Error signing up:", error);
             throw error;
         }
-
-        route.back();
     };
 
     const handleLogin = () => {

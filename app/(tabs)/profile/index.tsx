@@ -8,15 +8,13 @@ import {
     Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { deleteSecurely } from '@/utils/storage';
 
 const ProfileScreen = () => {
     const router = useRouter();
-    const { bottom: safeAreaBottom } = useSafeAreaInsets();
 
     const handleLogout = async () => {
-        await deleteSecurely('access_token');
+        await deleteSecurely('token');
         router.replace('/');
     };
 
