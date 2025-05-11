@@ -28,6 +28,7 @@ interface SlideTabBarProps extends BottomTabBarProps {
     tabWidth?: number;
     indicatorStyle?: ViewStyle;
     labelStyle?: TextStyle;
+    indicatorType?: "underline" | "rectangle";
 }
 
 export function SlideTabBar({
@@ -38,11 +39,12 @@ export function SlideTabBar({
     tabWidth = Dimensions.get("window").width / tabs.length,
     indicatorStyle = {},
     labelStyle = {},
+    indicatorType = "underline",
 }: SlideTabBarProps) {
     const translateX = useSharedValue(0);
 
     React.useEffect(() => {
-        translateX.value = withSpring(state.index * tabWidth);
+        translateX.value = withSpring(state.index * tabWidth, { damping: 20 });
     }, [state.index]);
 
     const animatedIndicatorStyle = useAnimatedStyle(() => ({
@@ -51,21 +53,40 @@ export function SlideTabBar({
 
     return (
         <View style={{ flexDirection: "row", height: 64, backgroundColor: "#fff", elevation: 8 }}>
-            <Animated.View
-                style={[{
-                    position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    height: 4,
-                    width: tabWidth,
-                    backgroundColor: "#000",
-                    borderRadius: 2,
-                }, indicatorStyle, animatedIndicatorStyle]}
-            />
+            {indicatorType === "underline" && (
+                <Animated.View
+                    style={[{
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        height: 4,
+                        width: tabWidth,
+                        backgroundColor: "#000",
+                        borderRadius: 2,
+                    }, indicatorStyle, animatedIndicatorStyle]}
+                />
+            )}
+
+            {indicatorType === "rectangle" && (
+                <Animated.View
+                    style={[{
+                        position: "absolute",
+                        top: 8,
+                        left: 0,
+                        height: 48,
+                        width: tabWidth - 16,
+                        marginHorizontal: 8,
+                        borderRadius: 12,
+                        backgroundColor: "#f0f0f0",
+                        zIndex: -1,
+                    }, indicatorStyle, animatedIndicatorStyle]}
+                />
+            )}
 
             {state.routes.map((route, index) => {
                 const isFocused = state.index === index;
                 const { options } = descriptors[route.key];
+
                 const onPress = () => {
                     const event = navigation.emit({
                         type: "tabPress",
