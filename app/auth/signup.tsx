@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { View, Text, TextInput, Pressable, TouchableOpacity } from "react-native";
+import { signupUser } from "@/services/auth";
 
 export default function SignupScreen() {
     const [username, setUsername] = useState("");
@@ -10,8 +11,20 @@ export default function SignupScreen() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const route = useRouter();
 
-    const handleSignup = () => {
+    const handleSignup = async () => {
         console.log("Signup pressed", { username, name, email, password, confirmPassword });
+        try {
+            await signupUser({
+                username: username,
+                name: name,
+                email: email,
+                password: password,
+            });
+        } catch (error) {
+            console.error("Error signing up:", error);
+            throw error;
+        }
+
         route.back();
     };
 

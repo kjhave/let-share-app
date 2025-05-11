@@ -28,8 +28,8 @@ export default function FriendsTabScreen() {
                 <Animated.View
                     key="friends"
                 >
-                    <FriendCard name="Alice" id="u123" />
-                    <FriendCard name="Bob" id="u124" />
+                    <FriendCard name="Kjhave" id="u123" />
+                    <FriendCard name="Kale" id="u124" />
                 </Animated.View>
             ) : (
                 <Animated.View

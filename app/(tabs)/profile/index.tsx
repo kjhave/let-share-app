@@ -79,7 +79,7 @@ const ProfileScreen = () => {
 
                 {/* Logout Button */}
                 <TouchableOpacity
-                    className="bg-[#36454F] py-4 rounded-md mt-6"
+                    className="bg-[#0D3B66] py-4 rounded-md mt-6"
                     onPress={handleLogout}
                 >
                     <Text className="text-white text-lg font-bold text-center">Logout</Text>
