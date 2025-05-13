@@ -39,7 +39,6 @@ export const loginUser = async (
     }
 ): Promise<void> => {
     try {
-        console.log(SERVER_URL, userInformation)
         const response = await fetch(`${SERVER_URL}/authentication/login`, {
             method: "POST",
             headers: {
@@ -57,8 +56,6 @@ export const loginUser = async (
         if (!data || !data.token) {
             throw new Error("Failed to retrieve token from response");
         }
-
-        console.log("Login response data:", data.token);
 
         await saveSecurely("token", data.token);
     } catch (error) {

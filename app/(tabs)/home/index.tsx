@@ -1,11 +1,32 @@
 import { View, Text, Pressable } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { useEffect, useState } from 'react';
+import { fetchSecurely } from '@/utils/storage';
 
 export default function HomeTabScreen() {
-    const user = {
-        name: 'Khanh',
-        id: 'u197'
-    };
+    const [userName, setUserName] = useState<string>("khanh");
+    const [userId, setUserId] = useState<string>("#0");
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const storedName = await fetchSecurely('name');
+            const storedUserId = await fetchSecurely('userId');
+            console.log(storedName, storedUserId);
+            if (storedName) {
+                setUserName(storedName);
+            }
+
+            if (storedUserId) {
+                setUserId(storedUserId);
+            }
+        };
+
+        fetchUser();
+    }, []);
+
+    if (!userName || !userId) {
+        return <Text>Loading user...</Text>;
+    }
 
     const scaleCreateContract = useSharedValue(1);
     const opacityCreateContract = useSharedValue(1);
@@ -31,8 +52,8 @@ export default function HomeTabScreen() {
             <View className="bg-[#0D3B66] rounded-xl p-6 mb-8 flex-row justify-between items-center">
                 <Text className="text-2xl font-bold text-[#FFFFFF]">Let Share</Text>
                 <View className="items-end">
-                    <Text className="text-lg text-[#FFFFFF] font-semibold">{user.name}</Text>
-                    <Text className="text-sm text-[#B0CDEB]">#{user.id}</Text>
+                    <Text className="text-lg text-[#FFFFFF] font-semibold">{userName}</Text>
+                    <Text className="text-sm text-[#B0CDEB]">{userId}</Text>
                 </View>
             </View>
 

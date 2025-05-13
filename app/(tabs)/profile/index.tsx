@@ -8,10 +8,27 @@ import {
     Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { deleteSecurely } from '@/utils/storage';
+import { deleteSecurely, fetchSecurely } from '@/utils/storage';
 
 const ProfileScreen = () => {
     const router = useRouter();
+
+    const [userName, setUserName] = React.useState<string>("khanh");
+    
+    React.useEffect(() => {
+        const fetchUser = async () => {
+            const storedName = await fetchSecurely('name');
+
+
+            if (storedName) {
+                setUserName(storedName);
+            }
+
+        };
+
+        fetchUser();
+    }, []);
+    
 
     const handleLogout = async () => {
         await deleteSecurely('token');
@@ -42,7 +59,7 @@ const ProfileScreen = () => {
                             className="w-full h-full"
                         />
                     </View>
-                    <Text className="text-xl font-bold text-gray-800">Nguyen Ngoc Khanh</Text>
+                    <Text className="text-xl font-bold text-gray-800">{userName}</Text>
                 </View>
 
                 {/* Account Section */}

@@ -9,7 +9,6 @@ export default function LoginScreen() {
     const route = useRouter();
 
     const handleLogin = async () => {
-        console.log("Login pressed", username, password);
         await loginUser({
             username: username,
             password: password,
