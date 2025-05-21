@@ -57,6 +57,8 @@ export const loginUser = async (
             throw new Error("Failed to retrieve token from response");
         }
 
+        console.log("Token received:", data.token);
+
         await saveSecurely("token", data.token);
     } catch (error) {
         console.error("Error signing up user:", error);

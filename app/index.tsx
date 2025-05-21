@@ -1,7 +1,7 @@
 import { Text, View } from "react-native";
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { fetchSecurely } from "@/utils/storage";
+import { deleteSecurely, fetchSecurely } from "@/utils/storage";
 import { getAccountInfor } from "@/services/account";
 
 export default function Index() {
@@ -10,16 +10,26 @@ export default function Index() {
     useEffect(() => {
         const checkAuth = async () => {
             const token = await fetchSecurely('token');
+
             if (token) {
-                // Token exists, user is logged in
+                // Token exists
+
                 try {
                     await getAccountInfor();
                 }
                 catch (error: any) {
+                    
+                    // Handle token expiration or invalid token
                     console.error("Error fetching account information:", error);
+                    deleteSecurely('token');
+                    router.replace('/auth/login');
+                    return;
                 }
+
+                // Token is valid, navigate to home
                 router.replace('/home');
             } else {
+
                 // No token, go to login
                 router.replace('/auth/login');
             }

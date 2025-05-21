@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Text, Pressable } from 'react-native';
 
 interface FriendCardProps {
     name: string;
@@ -10,9 +9,19 @@ interface FriendCardProps {
 
 export default function FriendCard({ name, id, onPress }: FriendCardProps) {
     return (
-        <Pressable onPress={onPress} className="bg-white p-4 rounded-xl shadow-md mb-3">
-            <Text className="text-lg font-semibold">{name}</Text>
-            <Text className="text-sm text-gray-500">ID: {id}</Text>
+        <Pressable
+            onPress={onPress}
+            className="bg-white p-4 rounded-2xl mb-3 -mx-4"
+            style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 4, height: 2 },
+                shadowOpacity: 0.15,
+                shadowRadius: 10,
+                elevation: 6,
+            }}
+        >
+            <Text className="text-lg font-semibold max-w-full">{name}</Text>
+            <Text className="text-sm text-gray-500 max-w-full">ID: {id}</Text>
         </Pressable>
     );
 }
