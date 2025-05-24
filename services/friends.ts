@@ -38,8 +38,6 @@ export const getFriends = async (): Promise<Friend[]> => {
         }
 
         const data = await response.json();
-        
-        console.log("Friend data:", data);
 
         if (!Array.isArray(data)) {
             throw new Error("Failed to fetch friend list");

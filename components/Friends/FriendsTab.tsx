@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 // services
 import { getFriends, type Friend } from '@/services/friends';
-import FriendCard from './FriendCard';
+import FriendCard from '../ProfileCard';
 
 export default function FriendsTab() {
     const [friends, setFriends] = useState<Friend[]>([]);
@@ -21,10 +21,6 @@ export default function FriendsTab() {
 
         fetchFriends();
     }, []);
-
-    const friendInspect = (friend: Friend): void => {
-        console.log("Friend Inspect:", friend);
-    }
 
     return (
         <View className="py-4">
@@ -44,7 +40,6 @@ export default function FriendsTab() {
                                 key={friend.id}
                                 name={friend.name}
                                 id={friend.id}
-                                onPress={() => friendInspect(friend)}
                             />
                         ))
                     ) : (

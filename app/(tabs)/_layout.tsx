@@ -14,7 +14,7 @@ export default function TabLayout() {
             tabBar={(props) => <SlideTabBar {...props} tabs={tabItems} />}
             screenOptions={{
                 headerShown: false,
-                animation: "fade"
+                animation: "shift"
             }}
         >
             {tabItems.map((item) => (

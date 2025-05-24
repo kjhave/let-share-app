@@ -1,13 +1,17 @@
 import React from 'react';
 import { Text, Pressable } from 'react-native';
 
-interface FriendCardProps {
+interface ProfileCardProps {
     name: string;
     id: string;
-    onPress?: () => void;
 }
 
-export default function FriendCard({ name, id, onPress }: FriendCardProps) {
+export default function ProfileCard({ name, id }: ProfileCardProps) {
+    const onPress = () => {
+        //show popup
+        console.log("profile pressed:", name, id);
+    }
+
     return (
         <Pressable
             onPress={onPress}

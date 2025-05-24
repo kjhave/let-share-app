@@ -1,7 +1,8 @@
-import { View, Text, Pressable } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { View, Text } from 'react-native';
 import { useEffect, useState } from 'react';
 import { fetchSecurely } from '@/utils/storage';
+import PressableButton from '@/components/PressableButton';
+import { useRouter } from 'expo-router';
 
 export default function HomeTabScreen() {
     const [userName, setUserName] = useState<string>("khanh");
@@ -28,23 +29,19 @@ export default function HomeTabScreen() {
         return <Text>Loading user...</Text>;
     }
 
-    const scaleCreateContract = useSharedValue(1);
-    const opacityCreateContract = useSharedValue(1);
-    const animatedCreateContractStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{ scale: scaleCreateContract.value }],
-            opacity: opacityCreateContract.value,
-        };
-    });
+    const router = useRouter();
 
-    const scaleFinancial = useSharedValue(1);
-    const opacityFinancial = useSharedValue(1);
-    const animatedFinancialStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{ scale: scaleFinancial.value }],
-            opacity: opacityFinancial.value,
-        };
-    });
+    const handleContractMakingFunction = () => {
+        router.push('/contracts/make');
+    }
+
+    const handlePayBillFunction = () => {
+        router.push('/contracts/bill');
+    }
+
+    const handleShowFinancialRelationship = () => {
+
+    }
 
     return (
         <View className="flex-1 bg-white p-4">
@@ -59,39 +56,11 @@ export default function HomeTabScreen() {
 
             {/* Body section */}
             <View className="flex gap-4 space-y-4">
-                <Pressable
-                    className="bg-gray-200 py-3 px-4 rounded-xl items-center"
-                    onPress={() => {console.log('Create New Contract')}}
-                    onPressIn={() => {
-                        scaleCreateContract.value = withTiming(0.95, { duration: 100 });
-                        opacityCreateContract.value = withTiming(0.7, { duration: 100 });
-                    }}
-                    onPressOut={() => {
-                        scaleCreateContract.value = withTiming(1, { duration: 150 });
-                        opacityCreateContract.value = withTiming(1, { duration: 150 });
-                    }}
-                >
-                    <Animated.View style={animatedCreateContractStyle}>
-                        <Text className="text-gray-800 font-medium">Create New Contract</Text>
-                    </Animated.View>
-                </Pressable>
+                <PressableButton title={"Make Contract"} onPress={handleContractMakingFunction} />
 
-                <Pressable
-                    className="bg-gray-200 py-3 px-4 rounded-xl items-center hover:bg-gray-300"
-                    onPress={() => {console.log('Show Financial Relationships')}}
-                    onPressIn={() => {
-                        scaleFinancial.value = withTiming(0.95, { duration: 100 });
-                        opacityFinancial.value = withTiming(0.7, { duration: 100 });
-                    }}
-                    onPressOut={() => {
-                        scaleFinancial.value = withTiming(1, { duration: 150 });
-                        opacityFinancial.value = withTiming(1, { duration: 150 });
-                    }}
-                >
-                    <Animated.View style={animatedFinancialStyle}>
-                        <Text className="text-gray-800 font-medium">Show Financial Relationships</Text>
-                    </Animated.View>
-                </Pressable>
+                <PressableButton title={"Pay Bill"} onPress={handlePayBillFunction} />
+
+                <PressableButton title={"Show Financial Relationships"} onPress={handleShowFinancialRelationship} />
             </View>
         </View>
     );

@@ -57,7 +57,6 @@ export default function FriendsTabScreen() {
                 </View>
             </Animated.View>
 
-            {/* <FriendRequestButton onPress={sendFriendRequest} /> */}
             <AddFriendScreen />
         </View>
     );

@@ -13,7 +13,7 @@ interface Props {
     onClose: () => void;
 }
 
-export default function FriendProfilePopup({ friend, onClose }: Props) {
+export default function ProfilePopup({ friend, onClose }: Props) {
     if (!friend) return null;
 
     return (
