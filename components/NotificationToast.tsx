@@ -1,80 +1,61 @@
-import React, { useEffect } from 'react';
-import { Text, Pressable, View } from 'react-native';
-import Animated, {
-    useSharedValue,
-    useAnimatedStyle,
-    withTiming,
-    withDelay,
-    runOnJS,
-} from 'react-native-reanimated';
+import React from 'react';
+import { View, Text, Pressable } from 'react-native';
+import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 
-interface NotificationToastProps {
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+export type Toast = {
+    id: string;
     message: string;
-    type?: 'success' | 'error' | 'info';
-    onClose?: () => void;
-    duration?: number;
-}
+    title?: string;
+    type?: ToastType;
+};
 
-const NotificationToast: React.FC<NotificationToastProps> = ({
-    message,
-    type = 'info',
-    onClose,
-    duration = 3000,
-}) => {
-    const opacity = useSharedValue(0);
-    const translateY = useSharedValue(-40);
+const iconMap: Record<ToastType, JSX.Element> = {
+    success: <Ionicons name="checkmark-circle" size={20} color="#22c55e" />,
+    error: <Ionicons name="close-circle" size={20} color="#ef4444" />,
+    info: <Ionicons name="information-circle" size={20} color="#3b82f6" />,
+    warning: <Ionicons name="warning" size={20} color="#facc15" />,
+};
 
-    useEffect(() => {
-        opacity.value = withTiming(1, { duration: 300 });
-        translateY.value = withTiming(0, { duration: 300 });
+const colorMap: Record<ToastType, string> = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    info: 'bg-blue-500',
+    warning: 'bg-yellow-400',
+};
 
-        translateY.value = withDelay(
-            duration,
-            withTiming(-20, { duration: 400 }, () => {
-                opacity.value = withTiming(0, { duration: 300 }, () => {
-                    if (onClose) runOnJS(onClose)();
-                });
-            })
-        );
-    }, []);
+const toastTypeLabel: Record<ToastType, string> = {
+    success: 'Success',
+    error: 'Error',
+    info: 'Info',
+    warning: 'Warning',
+};
 
-    const animatedStyle = useAnimatedStyle(() => ({
-        opacity: opacity.value,
-        transform: [{ translateY: translateY.value }],
-    }));
-
-    const getColor = () => {
-        switch (type) {
-            case 'success': return '#28a745';
-            case 'error': return '#dc3545';
-            default: return '#0D3B66';
-        }
-    };
+export const ToastNotification: React.FC<{ toast: Toast; onClose: () => void }> = ({ toast, onClose }) => {
+    const type = toast.type || 'info';
 
     return (
         <Animated.View
-            style={[
-                {
-                    position: 'absolute',
-                    top: 50,
-                    left: 20,
-                    right: 20,
-                    padding: 12,
-                    borderRadius: 12,
-                    backgroundColor: getColor(),
-                    zIndex: 999,
-                    elevation: 999,
-                },
-                animatedStyle,
-            ]}
+            entering={FadeInDown.springify().duration(300)}
+            exiting={FadeOutUp.springify().duration(400)}
+            className="w-full max-w-[90%] mb-2 rounded-xl shadow-md bg-white flex-row overflow-hidden"
+            style={{ elevation: 4 }}
         >
-            <Pressable onPress={onClose}>
-                <Text style={{ color: 'white', fontSize: 16, textAlign: 'center' }}>
-                    {message}
-                </Text>
-            </Pressable>
+            <View className={`w-2 ${colorMap[type]}`} />
+            <View className="flex-1 flex-row items-start px-3 py-2">
+                <View className="pt-1 pr-2">{iconMap[type]}</View>
+                <View className="flex-1">
+                    <Text className="font-semibold text-sm text-black mb-0.5">
+                        {toast.title || toastTypeLabel[type]}
+                    </Text>
+                    <Text className="text-xs text-gray-700">{toast.message}</Text>
+                </View>
+                <Pressable onPress={() => onClose()}>
+                    <Ionicons name="close" size={16} color="#999" />
+                </Pressable>
+            </View>
         </Animated.View>
     );
 };
-
-export default NotificationToast;

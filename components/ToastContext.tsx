@@ -1,46 +1,57 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import NotificationToast from './NotificationToast';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { View, Text, Pressable } from 'react-native';
+import { ToastNotification } from './NotificationToast';
 
-type ToastType = 'success' | 'error' | 'info';
+type ToastType = 'success' | 'error' | 'info' | 'warning';
 
-interface Toast {
+type Toast = {
+    id: string;
     message: string;
+    title?: string;
     type?: ToastType;
-    duration?: number;
-}
+};
 
-interface ToastContextProps {
-    show: (message: string, type?: ToastType, duration?: number) => void;
-}
+type ToastContextType = {
+    showToast: (msg: string, opts?: { title?: string; type?: ToastType }) => void;
+};
 
-const ToastContext = createContext<ToastContextProps | undefined>(undefined);
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-export const ToastProvider = ({ children }: { children: ReactNode }) => {
-    const [toast, setToast] = useState<Toast | null>(null);
+export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
+    const [toasts, setToasts] = useState<Toast[]>([]);
 
-    const show = (message: string, type: ToastType = 'info', duration = 3000) => {
-        setToast({ message, type, duration });
+    const showToast = useCallback((message: string, opts?: { title?: string; type?: ToastType }) => {
+        const id = Date.now().toString();
+        const toast: Toast = { id, message, ...opts };
+        setToasts((prev) => [...prev, toast]);
+        setTimeout(() => {
+            setToasts((prev) => prev.filter((t) => t.id !== id));
+        }, 3500);
+    }, []);
+
+    const removeToast = (id: string) => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
     };
 
     return (
-        <ToastContext.Provider value={{ show }}>
+        <ToastContext.Provider value={{ showToast }}>
             {children}
-            {toast && (
-                <NotificationToast
-                    message={toast.message}
-                    type={toast.type}
-                    duration={toast.duration}
-                    onClose={() => setToast(null)}
-                />
-            )}
+            <View className="absolute top-4 left-0 right-0 items-center z-50 px-4">
+                {toasts.map((curToast) => (
+                    <ToastNotification
+                        key={curToast.id}
+                        toast={curToast}
+                        onClose={() => removeToast(curToast.id)}
+                    />
+                ))}
+            </View>
+            
         </ToastContext.Provider>
     );
 };
 
-export const useToast = (): ToastContextProps => {
-    const context = useContext(ToastContext);
-    if (!context) {
-        throw new Error('useToast must be used within a ToastProvider');
-    }
-    return context;
+export const useToast = () => {
+    const ctx = useContext(ToastContext);
+    if (!ctx) throw new Error('useToast must be used within ToastProvider');
+    return ctx;
 };
