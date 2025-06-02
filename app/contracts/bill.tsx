@@ -15,7 +15,7 @@ type ISplitter = {
     amount: string;
 };
 
-export default function ContractMaking1ToNPage() {
+export default function PayBillPage() {
     const router = useRouter();
 
     const [contractName, setContractName] = useState('');

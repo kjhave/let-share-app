@@ -39,6 +39,10 @@ export default function HomeTabScreen() {
         router.push('/contracts/bill');
     }
 
+    const handleHangOutFunction = () => {
+        router.push('/contracts/hangout');
+    }
+
     const handleShowFinancialRelationship = () => {
 
     }
@@ -59,6 +63,8 @@ export default function HomeTabScreen() {
                 <PressableButton title={"Make Contract"} onPress={handleContractMakingFunction} />
 
                 <PressableButton title={"Pay Bill"} onPress={handlePayBillFunction} />
+
+                <PressableButton title={"Let's Hang Out"} onPress={handleHangOutFunction} />
 
                 <PressableButton title={"Show Financial Relationships"} onPress={handleShowFinancialRelationship} />
             </View>

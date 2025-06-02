@@ -12,11 +12,14 @@ import { fetchSecurely } from "@/utils/storage";
 
 import { getContactInfor, type contactInformation } from "@/services/account";
 import { sendFriendRequest } from "@/services/friends";
+import { useToast } from "../ToastContext";
 
 export default function FriendRequest() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const isOpen = useSharedValue(false);
     const overlayOpacity = useSharedValue(0);
+
+    const noti = useToast();
 
     const overlayStyle = useAnimatedStyle(() => ({
         opacity: overlayOpacity.value,
@@ -86,9 +89,11 @@ export default function FriendRequest() {
 
         try {
             await sendFriendRequest(foundUser?.id);
+            noti.show("Friend request sent", "success");
             console.log("Friend request sent successfully");
         }
         catch (error) {
+            noti.show("Something went wrong", "error");
             console.error("Error sending friend request:", error);
         }
     }
