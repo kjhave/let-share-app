@@ -1,6 +1,7 @@
 // components/AddFriendModal.tsx
 import { View, Text, Pressable, TextInput } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useToast } from '../ToastContext';
 import * as Clipboard from 'expo-clipboard';
 
 import { Dimensions } from 'react-native';
@@ -25,11 +26,14 @@ export default function AddFriendModal({
     notFound?: boolean;
     onSendRequest: () => void;
 }) {
+    const { showToast } = useToast();
     const copyFriendCode = async () => {
         try {
             await Clipboard.setStringAsync(userId);
+            showToast("Copy friend code successfully", { type: "success" });
         }
         catch(error){
+            showToast("Failed to copy friend code", { type: "error" });
             console.log("Error when trying to copy friend code", error);
         }
     }

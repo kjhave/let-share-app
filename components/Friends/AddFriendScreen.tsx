@@ -19,7 +19,7 @@ export default function FriendRequest() {
     const isOpen = useSharedValue(false);
     const overlayOpacity = useSharedValue(0);
 
-    const noti = useToast();
+    const { showToast } = useToast();
 
     const overlayStyle = useAnimatedStyle(() => ({
         opacity: overlayOpacity.value,
@@ -78,6 +78,7 @@ export default function FriendRequest() {
 
     const onSendRequest = async (): Promise<void> => {
         if (!foundUser) {
+            showToast("User not found", { type: "error" });
             console.error("No user found");
             return;
         }
@@ -89,11 +90,11 @@ export default function FriendRequest() {
 
         try {
             await sendFriendRequest(foundUser?.id);
-            noti.show("Friend request sent", "success");
+            showToast("Friend request sent", { type: "success" });
             console.log("Friend request sent successfully");
         }
         catch (error) {
-            noti.show("Something went wrong", "error");
+            showToast("Something went wrong", { type: "error" });
             console.error("Error sending friend request:", error);
         }
     }

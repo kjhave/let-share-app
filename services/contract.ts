@@ -8,7 +8,19 @@ if (!SERVER_URL) {
 
 import { fetchSecurely, deleteSecurely } from '@/utils/storage';
 
-export const makeContract = async (fromId: string, toId: string, amount: number): Promise<void> => {
+export const makeContract = async ({
+    name = "",
+    fromId,
+    toId,
+    amount,
+    description = ""
+}: {
+    name: string,
+    fromId: string,
+    toId: string,
+    amount: number,
+    description: string
+}): Promise<void> => {
     try {
         const token = await fetchSecurely("token");
         if (!token) {
@@ -22,6 +34,7 @@ export const makeContract = async (fromId: string, toId: string, amount: number)
                 "authorization": `Bearer ${token}`
             },
             body: JSON.stringify({
+                contractName: name,
                 contractPayer: fromId,
                 contractSplitters: [{
                     userId: toId,
@@ -29,7 +42,8 @@ export const makeContract = async (fromId: string, toId: string, amount: number)
                         itemName:"Money",
                         itemPrice:amount
                     }]
-                }]
+                }],
+                contractDescription: description
             })
         });
 

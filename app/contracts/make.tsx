@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import ProfileCard from '@/components/ProfileCard';
 import DropDownList from '@/components/DropDownList';
 import { useRouter } from 'expo-router';
 import { makeContract } from '@/services/contract';
-import { getContactInfor } from '@/services/account';
+import { fetchSecurely } from '@/utils/storage';
 
 type IProfileType = {
     name: string,
@@ -14,86 +14,51 @@ type IProfileType = {
 
 export default function ContractMakingPage() {
     const router = useRouter();
+    const [inputLayoutY, setInputLayoutY] = useState(0);
 
-    //lender state
-    const [lenderId, setLenderId] = useState('');
-    const [lenderProfile, setLenderProfile] = useState<IProfileType | null>( null );
-    const [showLenderDropdown, setShowLenderDropdown] = useState(false);
+    const [otherId, setOtherId] = useState('');
+    const [otherProfile, setOtherProfile] = useState<IProfileType | null>( null );
+    const [showDropdown, setShowDropdown] = useState(false);
 
-    //borrower state
-    const [borrowerId, setBorrowerId] = useState('');
-    const [borrowerProfile, setBorrowerProfile] = useState<IProfileType | null>( null );
-    const [showBorrowerDropdown, setShowBorrowerDropdown] = useState(false);
-
-    //share state
     const [contractName, setContractName] = useState('');
+    const [contractType, setContractType] = useState<'lend' | 'borrow'>('lend');
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
     const [friendList, setFriendList] = useState<{ id: string; name: string }[]>([]);
 
+    const [userId, setUserId] = useState("");
 
-    const handleLenderId = (userId: string) => {
-        setLenderId(userId);
-    }
-
-    const handleSearchLender = async () => {
-        try {
-            const profile = await getContactInfor(lenderId);
-            if (profile === null || !profile.name)
-                throw new Error("User not found");
-
-            setLenderProfile({
-                id: lenderId,
-                name: profile.name
-            });
-        } catch(err) {
-            console.log("Error while fetching lender Profile", err);
-            setLenderProfile({
-                id: "User not found",
-                name: "User not found"
-            });
+    useEffect(() => {
+        const fetchUserId = async () => {
+            const user = await fetchSecurely("userId");
+            if (user) {
+                setUserId(user);
+            } else {
+                console.error("No user ID found in secure storage");
+            }
         }
+
+        fetchUserId();
+    }, [userId]);
+
+    const handleOtherId = (userId: string) => {
+        setOtherId(userId);
     }
 
-    const selectLender = (item: any) => {
+    const selectOther = (item: any) => {
         if (item === null || !item.id || !item.name){
-            setLenderProfile({
+            setOtherProfile({
                 id: "User not found",
                 name: "User not found"
             });
             return;
         }
 
-        setLenderId(item.id);
-        setLenderProfile({
+        setOtherId(item.id);
+        setOtherProfile({
             id: item.id,
             name: item.name
         })
-    }
-
-    const handleBorrowerId = async (userId: string) => {
-        setBorrowerId(userId);
-        try {
-            const profile = await getContactInfor(userId);
-            if (profile === null || !profile.name){
-                setBorrowerProfile({
-                    id: "User not found",
-                    name: "User not found"
-                });
-                return;
-            }
-
-            setBorrowerProfile({
-                id: userId,
-                name: profile.name
-            });
-        } catch(err) {
-            console.log("Error while fetching borrower Profile", err);
-            setBorrowerProfile({
-                id: "User not found",
-                name: "User not found"
-            });
-        }
     }
 
     const handleAmountChange = (amt: string) => {
@@ -103,117 +68,155 @@ export default function ContractMakingPage() {
 
     const handleMakeContract = async () => {
         if (!amount)    return;
-        await makeContract(lenderId, borrowerId, parseInt(amount, 10));
+        try {
+            const fromId    = contractType === 'lend' ? userId : otherId;
+            const toId      = contractType === 'lend' ? otherId : userId;
+            await makeContract({
+                name: contractName,
+                fromId: fromId,
+                toId: toId,
+                amount: parseInt(amount, 10),
+                description: description
+            });
+        } catch(err){
+            console.log("Error when making contract: ", err);
+        }
     }
 
     return (
-        <View
-            className="flex-1 bg-white p-4"
-        >
-            {/* Back button */}
-            <Pressable onPress={() => router.back()} className="mb-4 w-10 h-10 justify-center items-center">
-                <Feather name="home" size={24} color="black" />
-            </Pressable>
-
-            {/* Contract Name */}
-            <Text className="text-base font-medium mb-1">Contract Name</Text>
-            <TextInput
-                className="border border-gray-300 rounded-xl px-4 py-2 mb-4"
-                placeholder="Enter contract name"
-                value={contractName}
-                onChangeText={setContractName}
-            />
-
-            {/* Lender ID Field */}
-                <Text className="text-sm font-medium text-gray-700 mb-1 mt-4">Lender ID</Text>
-                <View className="flex-row items-center space-x-2 mb-2 gap-2">
-                    <TextInput
-                        value={lenderId}
-                        onChangeText={handleLenderId}
-                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 bg-white text-base"
-                        placeholder="Enter Lender ID"
-                    />
-                    <Pressable
-                        className="p-2 border border-gray-300 rounded-lg"
-                        onPress={handleSearchLender}
-                    >
-                        <Feather name="search" size={20} color="black" />
-                    </Pressable>
-                    <Pressable
-                        className="p-2 border border-gray-300 rounded-lg"
-                        onPress={() => setShowLenderDropdown(true)}
-                    >
-                        <Feather name="chevron-down" size={20} color="black" />
-                    </Pressable>
-                </View>
-
-                <DropDownList
-                    items={friendList}
-                    onSelect={(item) => selectLender(item)}
-                    isVisible={showLenderDropdown}
-                    onClose={() => setShowLenderDropdown(false)}
-                />
-
-                {/* Profile preview */}
-                <View className="mt-2 mb-4 w-full items-center">
-                    <View className="w-full px-4 min-h-[80px]">
-                        {lenderProfile?.id ? (
-                            <ProfileCard name={lenderProfile.name} id={lenderId} />
-                        ) : (
-                            <Text className="text-sm text-gray-400">No user found</Text>
-                        )}
-                    </View>
-                </View>
-
-            {/* Borrower ID Field */}
-            <Text className="text-sm font-medium text-gray-700 mb-1">Borrower ID</Text>
-            <TextInput
-                value={borrowerId}
-                onChangeText={handleBorrowerId}
-                className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-base"
-            />
-
-            <View className="mt-2 mb-4 w-full items-center">
-                <View className="w-full px-4 min-h-[80px]">
-                    {borrowerProfile?.id ? (
-                        <ProfileCard name={borrowerProfile.name} id={borrowerId} />
-                    ) : (
-                        <Text className="text-sm text-gray-400">No user found</Text>
-                    )}
-                </View>
-            </View>
-
-            {/* Amount */}
-            <Text className="text-base font-medium mb-1 mt-4">Amount</Text>
-            <TextInput
-                className="border border-gray-300 rounded-xl px-4 py-2 mb-4"
-                placeholder="Enter amount"
-                keyboardType="numeric"
-                value={amount}
-                onChangeText={handleAmountChange}
-            />
-
-            {/* Description */}
-            <Text className="text-sm font-medium text-gray-700 mb-1">Description</Text>
-            <TextInput
-                value={description}
-                onChangeText={(text) => {
-                    if (text.length <= 128) setDescription(text)
-                }}
-                multiline
-                className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-base"
-                style={{ minHeight: 80 }}
-                placeholder="Enter contract description"
-            />
-            <Text className="text-xs text-gray-400 text-right mt-1">{description.length}/128</Text>
-
-            {/* Submit Button */}
-            <Pressable
-                className="bg-[#0D3B66] py-3 rounded-xl items-center"
-                onPress={handleMakeContract}
+        <View className='flex-1 bg-white relative'>
+            <KeyboardAvoidingView
+                className="flex-1 bg-white"
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
-                <Text className="text-white text-base font-semibold">Create Contract</Text>
-            </Pressable>
+                <ScrollView
+                    contentContainerStyle={{ padding: 16 }}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    {/* Back button */}
+                    <Pressable onPress={() => router.back()} className="mb-4 w-10 h-10 justify-center items-center">
+                        <Feather name="home" size={24} color="black" />
+                    </Pressable>
+
+                    {/* Contract Name */}
+                    <Text className="text-base font-medium mb-1">Contract Name</Text>
+                    <TextInput
+                        className="border border-gray-300 rounded-xl px-4 py-2 mb-4"
+                        placeholder="Enter contract name"
+                        value={contractName}
+                        onChangeText={setContractName}
+                    />
+
+                    {/* Contract Type */}
+                    <Text className="text-base font-medium mb-1">Contract Type</Text>
+                    <View className="flex-row mb-2 gap-2">
+                        <Pressable
+                            className={`px-4 py-2 rounded-lg border ${
+                                contractType === 'lend' ? 'bg-[#0D3B66]' : 'bg-white'
+                            }`}
+                            onPress={() => setContractType('lend')}
+                        >
+                            <Text className={contractType === 'lend' ? 'text-white' : 'text-black'}>
+                                Lend
+                            </Text>
+                        </Pressable>
+                        <Pressable
+                            className={`px-4 py-2 rounded-lg border ${
+                                contractType === 'borrow' ? 'bg-[#0D3B66]' : 'bg-white'
+                            }`}
+                            onPress={() => setContractType('borrow')}
+                        >
+                            <Text className={contractType === 'borrow' ? 'text-white' : 'text-black'}>
+                                Borrow
+                            </Text>
+                        </Pressable>
+                    </View>
+                    <Text className="text-xs text-gray-500 mb-4">
+                        You are the {contractType === 'lend' ? 'lender' : 'borrower'} in this contract.
+                    </Text>
+
+                    {/* otherID Field */}
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Contract with (ID)</Text>
+                    <View
+                        className="flex-row items-center space-x-2 mb-2 gap-2"
+                        onLayout={(e) => {
+                            setInputLayoutY(e.nativeEvent.layout.y + e.nativeEvent.layout.height);
+                        }}
+                    >
+                        <TextInput
+                            value={otherId}
+                            onChangeText={handleOtherId}
+                            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 bg-white text-base"
+                            placeholder="Select or paste ID"
+                        />
+                        <Pressable
+                            className="p-2 border border-gray-300 rounded-lg"
+                            onPress={() => setShowDropdown(true)}
+                        >
+                            <Feather name="chevron-down" size={20} color="black" />
+                        </Pressable>
+                    </View>
+
+                    {/* Profile preview */}
+                    <View className="mt-2 mb-4 w-full items-center">
+                        <View className="w-full px-4 min-h-[80px]">
+                            {otherProfile?.id ? (
+                                <ProfileCard name={otherProfile.name} id={otherId} />
+                            ) : (
+                                <Text className="text-sm text-gray-400">No user selected</Text>
+                            )}
+                        </View>
+                    </View>
+
+                    {/* Amount */}
+                    <Text className="text-base font-medium mb-1">Amount</Text>
+                    <TextInput
+                        className="border border-gray-300 rounded-xl px-4 py-2 mb-4"
+                        placeholder="Enter amount"
+                        keyboardType="numeric"
+                        value={amount}
+                        onChangeText={handleAmountChange}
+                    />
+
+                    {/* Description */}
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Description</Text>
+                    <TextInput
+                        value={description}
+                        onChangeText={(text) => {
+                            if (text.length <= 128) setDescription(text);
+                        }}
+                        multiline
+                        className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-base"
+                        style={{ minHeight: 80 }}
+                        placeholder="Enter contract description"
+                    />
+                    <Text className="text-xs text-gray-400 text-right mt-1">
+                        {description.length}/128
+                    </Text>
+
+                    {/* Submit Button */}
+                    <Pressable
+                        className="bg-[#0D3B66] py-3 rounded-xl items-center mt-6"
+                        onPress={handleMakeContract}
+                    >
+                        <Text className="text-white text-base font-semibold">Create Contract</Text>
+                    </Pressable>
+                </ScrollView>
+            </KeyboardAvoidingView>
+            
+            {showDropdown &&
+                <View
+                    className='absolute left-4 right-3 z-50'
+                    style={{ top: inputLayoutY }}
+                >
+                    <DropDownList
+                        items={friendList}
+                        onSelect={selectOther}
+                        isVisible={showDropdown}
+                        onClose={() => setShowDropdown(false)}
+                    />
+                </View>
+            }
         </View>
     );
 }

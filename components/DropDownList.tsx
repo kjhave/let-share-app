@@ -4,9 +4,9 @@ import {
     Text,
     Pressable,
     FlatList,
-    TouchableWithoutFeedback,
     StyleSheet,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
 type Friend = {
     id: string;
@@ -23,7 +23,7 @@ type Props = {
 };
 
 const DropDownList: React.FC<Props> = ({
-    items,
+    items = [],
     onSelect,
     isVisible,
     onClose,
@@ -35,36 +35,38 @@ const DropDownList: React.FC<Props> = ({
     const totalHeight = itemHeight * visibleCount + 16 + (visibleCount - 1) * 8;
 
     return (
-        <TouchableWithoutFeedback onPress={onClose}>
-            <View style={styles.overlay}>
-                <View
-                    style={[
-                        styles.dropdown,
-                        {
-                            height: totalHeight,
-                        },
-                    ]}
-                >
-                    <FlatList
-                        data={items}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <Pressable
-                                onPress={() => {
-                                    onSelect(item);
-                                    onClose();
-                                }}
-                                style={[styles.item, { height: itemHeight }]}
-                            >
-                                <Text style={styles.text}>{item.name} ({item.id})</Text>
-                            </Pressable>
-                        )}
-                        ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-                        showsVerticalScrollIndicator={false}
-                    />
-                </View>
+        <View style={styles.overlay}>
+            <View
+                style={[
+                    styles.dropdown,
+                    {
+                        height: totalHeight,
+                    },
+                ]}
+            >
+                <Pressable className="absolute top-3 right-3 z-20 h-7 w-7 p-1" onPress={onClose}>
+                    <Feather name="x" size={20} color="#333" />
+                </Pressable>
+
+                <FlatList
+                    data={items}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <Pressable
+                            onPress={() => {
+                                onSelect(item);
+                                onClose();
+                            }}
+                            style={[styles.item, { height: itemHeight }]}
+                        >
+                            <Text style={styles.text}>{item.name} ({item.id})</Text>
+                        </Pressable>
+                    )}
+                    ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+                    showsVerticalScrollIndicator={false}
+                />
             </View>
-        </TouchableWithoutFeedback>
+        </View>
     );
 };
 
