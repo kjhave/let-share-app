@@ -4,9 +4,19 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-na
 export default function PressableButton({
     title,
     onPress,
+    bgColor = "#e5e7eb",
+    textColor = "#1f2937",
+    borderColor = "",
+    padding = { y: 12, x: 16 },
+    primary = false,
 }:{
     title: string,
     onPress: () => void,
+    bgColor?: string,
+    textColor?: string,
+    borderColor?: string,
+    padding?: { y: number, x: number }
+    primary?: boolean,
 }){
     const scale = useSharedValue(1);
     const opacity = useSharedValue(1);
@@ -18,13 +28,20 @@ export default function PressableButton({
     });
 
     const handlePress = () => {
-        console.log(title, "button has pressed");
+        // console.log(title, "button has pressed");
         onPress();
     }
 
     return(
         <Pressable
-            className="bg-gray-200 py-3 px-4 rounded-xl items-center"
+            className="bg-gray-200 w-full rounded-xl items-center"
+            style={{
+                borderColor: borderColor || "transparent",
+                borderWidth: borderColor ? 1 : 0,
+                backgroundColor: bgColor,
+                paddingVertical: padding.y,
+                paddingHorizontal: padding.x,
+            }}
             onPress={handlePress}
             onPressIn={() => {
                 scale.value = withTiming(0.95, { duration: 100 });
@@ -36,7 +53,7 @@ export default function PressableButton({
             }}
         >
             <Animated.View style={animatedStyle}>
-                <Text className="text-gray-800 font-medium">{title}</Text>
+                <Text className={primary?"font-semibold":"font-medium"} style={{ color: textColor }}>{title}</Text>
             </Animated.View>
         </Pressable>
     );
