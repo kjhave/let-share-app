@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { makeContract } from '@/services/contract';
 import { fetchSecurely } from '@/utils/storage';
 import { getFriends, type Friend } from '@/services/friends';
+import { useToast } from '@/components/ToastContext';
 
 type IProfileType = {
     name: string,
@@ -28,13 +29,14 @@ export default function ContractMakingPage() {
     
     const [userId, setUserId] = useState("");
     const [friendList, setFriendList] = useState<Friend[]|null>(null);
+
+    const { showToast } = useToast();
     
     useEffect(() => {
         const fetchUserId = async () => {
             try {
                 const user = await fetchSecurely("userId");
                 setUserId(user);
-                console.log(user);
             } catch (err) {
                 console.error("Error fetching user id:", err);
             }
@@ -44,7 +46,6 @@ export default function ContractMakingPage() {
             try {
                 const friends = await getFriends();
                 setFriendList(friends);
-                console.log(friends);
             } catch (err) {
                 console.error("Error fetching friend list:", err);
             }
@@ -91,7 +92,11 @@ export default function ContractMakingPage() {
                 amount: parseInt(amount, 10),
                 description: description
             });
+
+            showToast('Contract created successfully!', { type: 'success' });
+        router.back();
         } catch(err){
+            showToast('Failed to created contract!', { type: 'error' });
             console.log("Error when making contract: ", err);
         }
     }
