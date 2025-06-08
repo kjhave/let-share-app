@@ -8,7 +8,7 @@ import {
     Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { deleteSecurely, fetchSecurely } from '@/utils/storage';
+import { clearUserStorage, deleteSecurely, fetchSecurely } from '@/utils/storage';
 
 const ProfileScreen = () => {
     const router = useRouter();
@@ -32,6 +32,7 @@ const ProfileScreen = () => {
 
     const handleLogout = async () => {
         await deleteSecurely('token');
+        await clearUserStorage();
         router.replace('/');
     };
 

@@ -14,10 +14,7 @@ export default function HangOutEntryPage() {
     const [joinRequests, setJoinRequests] = useState<string[]>([]); // example request codes
 
     useEffect(() => {
-        // const session = MMKV.getString('hangout_session');
-        // if (session) {
-        //     // router.replace('/hangout/activity');
-        // }
+
     }, []);
 
     const handleCreate = () => {

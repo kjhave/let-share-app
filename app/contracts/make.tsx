@@ -6,6 +6,7 @@ import DropDownList from '@/components/DropDownList';
 import { useRouter } from 'expo-router';
 import { makeContract } from '@/services/contract';
 import { fetchSecurely } from '@/utils/storage';
+import { getFriends, type Friend } from '@/services/friends';
 
 type IProfileType = {
     name: string,
@@ -24,22 +25,34 @@ export default function ContractMakingPage() {
     const [contractType, setContractType] = useState<'lend' | 'borrow'>('lend');
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
-    const [friendList, setFriendList] = useState<{ id: string; name: string }[]>([]);
-
+    
     const [userId, setUserId] = useState("");
-
+    const [friendList, setFriendList] = useState<Friend[]|null>(null);
+    
     useEffect(() => {
         const fetchUserId = async () => {
-            const user = await fetchSecurely("userId");
-            if (user) {
+            try {
+                const user = await fetchSecurely("userId");
                 setUserId(user);
-            } else {
-                console.error("No user ID found in secure storage");
+                console.log(user);
+            } catch (err) {
+                console.error("Error fetching user id:", err);
+            }
+        }
+
+        const fetchUserFriends = async () => {
+            try {
+                const friends = await getFriends();
+                setFriendList(friends);
+                console.log(friends);
+            } catch (err) {
+                console.error("Error fetching friend list:", err);
             }
         }
 
         fetchUserId();
-    }, [userId]);
+        fetchUserFriends();
+    }, []);
 
     const handleOtherId = (userId: string) => {
         setOtherId(userId);
@@ -147,7 +160,7 @@ export default function ContractMakingPage() {
                             value={otherId}
                             onChangeText={handleOtherId}
                             className="flex-1 border border-gray-300 rounded-lg px-4 py-2 bg-white text-base"
-                            placeholder="Select or paste ID"
+                            placeholder="Select ID"
                         />
                         <Pressable
                             className="p-2 border border-gray-300 rounded-lg"
@@ -204,7 +217,7 @@ export default function ContractMakingPage() {
                 </ScrollView>
             </KeyboardAvoidingView>
             
-            {showDropdown &&
+            {showDropdown && (friendList !== null) &&
                 <View
                     className='absolute left-4 right-3 z-50'
                     style={{ top: inputLayoutY }}
