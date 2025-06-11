@@ -39,19 +39,22 @@ export default function FriendRequest() {
     };
 
     const [userId, setUserId] = useState("");
+    const [usercode, setUserCode] = useState("");
 
     useEffect(() => {
-        const fetchUserId = async () => {
-            const user = await fetchSecurely("userId");
-            if (user) {
-                setUserId(user);
+        const fetchUserInfor = async () => {
+            const tmpId = await fetchSecurely("userId");
+            const tmpcode = await fetchSecurely("code");
+            if (tmpId && tmpcode) {
+                setUserId(tmpId);
+                setUserCode(tmpcode);
             } else {
-                console.error("No user ID found in secure storage");
+                console.error("No user found in secure storage");
             }
         }
 
-        fetchUserId();
-    }, [userId]);
+        fetchUserInfor();
+    }, []);
 
 
     const [friendCode, setFriendCode] = useState("");
@@ -63,9 +66,9 @@ export default function FriendRequest() {
     const [notFound, setNotFound] = useState(false);
     const onFind = async (): Promise<void> => {
         try {
-            const user = await getContactInfor(friendCode);
+            const user: contactInformation = await getContactInfor(friendCode);
             if (user) {
-                setFoundUser({ id: friendCode, name: user.name });
+                setFoundUser({ id: user.userId, name: user.name });
                 setNotFound(false);
             } else {
                 setNotFound(true);
@@ -114,7 +117,7 @@ export default function FriendRequest() {
             )}
             {isModalVisible && (
                 <AddFriendModal
-                    userId={userId}
+                    usercode={usercode}
                     onClose={closeModal}
                     onFind={onFind}
                     friendCode={friendCode}

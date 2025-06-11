@@ -45,17 +45,19 @@ export const getAccountInfor = async (): Promise<void> => {
 }
 
 export type contactInformation = {
+    userId: string;
     name: string;
+    code: string;
 }
 
-export const getContactInfor = async (userId: string): Promise<contactInformation> => {
+export const getContactInfor = async (usercode: string): Promise<contactInformation> => {
     try {
         const token = await fetchSecurely("token");
         if (!token) {
             throw new Error("No token found in secure storage");
         }
 
-        const response = await fetch(`${SERVER_URL}/accounts/contactInformation/${userId}`, {
+        const response = await fetch(`${SERVER_URL}/accounts/contactInformation/${usercode}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -74,7 +76,7 @@ export const getContactInfor = async (userId: string): Promise<contactInformatio
 
         const data = await response.json();
 
-        if (typeof data !== 'object' || !data.name) {
+        if (typeof data !== 'object' || !data.userId || !data.name || !data.code) {
             throw new Error("Failed to fetch account information");
         }
 

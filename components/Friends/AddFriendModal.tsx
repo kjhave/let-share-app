@@ -8,7 +8,7 @@ import { Dimensions } from 'react-native';
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
 export default function AddFriendModal({
-    userId,
+    usercode,
     onClose,
     onFind, 
     friendCode,
@@ -17,7 +17,7 @@ export default function AddFriendModal({
     notFound,
     onSendRequest,
 }: {
-    userId: string;
+    usercode: string;
     onClose: () => void;
     onFind: () => void;
     friendCode: string;
@@ -29,7 +29,7 @@ export default function AddFriendModal({
     const { showToast } = useToast();
     const copyFriendCode = async () => {
         try {
-            await Clipboard.setStringAsync(userId);
+            await Clipboard.setStringAsync(usercode);
             showToast("Copy friend code successfully", { type: "success" });
         }
         catch(error){
@@ -71,7 +71,7 @@ export default function AddFriendModal({
                 </Text>
 
                 <View className="flex-row items-center justify-between mb-4 bg-gray-100 rounded px-3 py-2">
-                    <Text className="font-mono">{userId}</Text>
+                    <Text className="font-mono">{usercode}</Text>
                     <Pressable onPress={copyFriendCode}>
                         <Feather name="copy" size={18} color="#0D3B66" />
                     </Pressable>
