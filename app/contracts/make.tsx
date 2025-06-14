@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import ProfileCard from '@/components/ProfileCard';
-import DropDownList from '@/components/DropDownList';
 import { useRouter } from 'expo-router';
 import { makeContract } from '@/services/contract';
 import { fetchSecurely } from '@/utils/storage';
-import { getFriends, type Friend } from '@/services/friends';
+import { getContactInfor } from '@/services/account';
 import { useToast } from '@/components/ToastContext';
+import { useDebouncedValue } from '@/hooks';
 
 type IProfileType = {
     name: string,
@@ -16,11 +16,35 @@ type IProfileType = {
 
 export default function ContractMakingPage() {
     const router = useRouter();
-    const [inputLayoutY, setInputLayoutY] = useState(0);
 
-    const [otherId, setOtherId] = useState('');
-    const [otherProfile, setOtherProfile] = useState<IProfileType | null>( null );
-    const [showDropdown, setShowDropdown] = useState(false);
+    const [otherCode, setOtherCode] = useState('');
+    const debouncedCode = useDebouncedValue(otherCode, 400);
+    const [otherProfile, setOtherProfile] = useState<IProfileType>({ name: '', id: '' });
+    const fetchOtherIdRef = useRef(0);
+
+    useEffect(() => {
+        if (!debouncedCode.trim()) {
+            setOtherProfile({ name: '', id: '' });
+            return;
+        }
+
+        const fetchOtherId = ++fetchOtherIdRef.current;
+        const fetchResults = async () => {
+            try {
+                const res = await getContactInfor(otherCode);
+
+                if (fetchOtherId === fetchOtherIdRef.current) {
+                    setOtherProfile({ id: res.userId, name: res.name });
+                }
+            } catch (err) {
+                if (fetchOtherId === fetchOtherIdRef.current) {
+                    setOtherProfile({ name: '', id: '' });
+                }
+            }
+        };
+
+        fetchResults();
+    }, [debouncedCode]);
 
     const [contractName, setContractName] = useState('');
     const [contractType, setContractType] = useState<'lend' | 'borrow'>('lend');
@@ -28,7 +52,6 @@ export default function ContractMakingPage() {
     const [description, setDescription] = useState('');
     
     const [userId, setUserId] = useState("");
-    const [friendList, setFriendList] = useState<Friend[]|null>(null);
 
     const { showToast } = useToast();
     
@@ -42,38 +65,8 @@ export default function ContractMakingPage() {
             }
         }
 
-        const fetchUserFriends = async () => {
-            try {
-                const friends = await getFriends();
-                setFriendList(friends);
-            } catch (err) {
-                console.error("Error fetching friend list:", err);
-            }
-        }
-
         fetchUserId();
-        fetchUserFriends();
     }, []);
-
-    const handleOtherId = (userId: string) => {
-        setOtherId(userId);
-    }
-
-    const selectOther = (item: any) => {
-        if (item === null || !item.id || !item.name){
-            setOtherProfile({
-                id: "User not found",
-                name: "User not found"
-            });
-            return;
-        }
-
-        setOtherId(item.id);
-        setOtherProfile({
-            id: item.id,
-            name: item.name
-        })
-    }
 
     const handleAmountChange = (amt: string) => {
         if (!(/^(0|[1-9][0-9]*)?$/.test(amt)))   return;
@@ -83,8 +76,8 @@ export default function ContractMakingPage() {
     const handleMakeContract = async () => {
         if (!amount)    return;
         try {
-            const fromId    = contractType === 'lend' ? userId : otherId;
-            const toId      = contractType === 'lend' ? otherId : userId;
+            const fromId    = contractType === 'lend' ? userId : otherProfile.id;
+            const toId      = contractType === 'lend' ? otherProfile.id : userId;
             await makeContract({
                 name: contractName,
                 fromId: fromId,
@@ -155,33 +148,21 @@ export default function ContractMakingPage() {
 
                     {/* otherID Field */}
                     <Text className="text-sm font-medium text-gray-700 mb-1">Contract with (ID)</Text>
-                    <View
-                        className="flex-row items-center space-x-2 mb-2 gap-2"
-                        onLayout={(e) => {
-                            setInputLayoutY(e.nativeEvent.layout.y + e.nativeEvent.layout.height);
-                        }}
-                    >
-                        <TextInput
-                            value={otherId}
-                            onChangeText={handleOtherId}
-                            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 bg-white text-base"
-                            placeholder="Select ID"
-                        />
-                        <Pressable
-                            className="p-2 border border-gray-300 rounded-lg"
-                            onPress={() => setShowDropdown(true)}
-                        >
-                            <Feather name="chevron-down" size={20} color="black" />
-                        </Pressable>
-                    </View>
+
+                    <TextInput
+                        value={otherCode}
+                        onChangeText={setOtherCode}
+                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 bg-white text-base"
+                        placeholder="Input Code"
+                    />
 
                     {/* Profile preview */}
                     <View className="mt-2 mb-4 w-full items-center">
                         <View className="w-full px-4 min-h-[80px]">
                             {otherProfile?.id ? (
-                                <ProfileCard name={otherProfile.name} id={otherId} />
+                                <ProfileCard name={otherProfile.name} id={otherProfile.id} />
                             ) : (
-                                <Text className="text-sm text-gray-400">No user selected</Text>
+                                <Text className="text-sm text-gray-400">Not found</Text>
                             )}
                         </View>
                     </View>
@@ -221,20 +202,7 @@ export default function ContractMakingPage() {
                     </Pressable>
                 </ScrollView>
             </KeyboardAvoidingView>
-            
-            {showDropdown && (friendList !== null) &&
-                <View
-                    className='absolute left-4 right-3 z-50'
-                    style={{ top: inputLayoutY }}
-                >
-                    <DropDownList
-                        items={friendList}
-                        onSelect={selectOther}
-                        isVisible={showDropdown}
-                        onClose={() => setShowDropdown(false)}
-                    />
-                </View>
-            }
+
         </View>
     );
 }

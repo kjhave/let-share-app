@@ -14,9 +14,10 @@ type IProfileType = {
 };
 
 type ISplitter = {
-    id: string;
+    code: string;
     profile: IProfileType | null;
     amount: string;
+    canUpdated: boolean;
 };
 
 export default function PayBillPage() {
@@ -47,7 +48,7 @@ export default function PayBillPage() {
     const addSplitter = () => {
         setSplitters(prev => [
             ...prev,
-            { id: '', profile: null, amount: '' }
+            { id: '', profile: null, amount: '' , code: '', canUpdated: true }
         ]);
     };
 
@@ -56,18 +57,32 @@ export default function PayBillPage() {
         setTotalAmount(newTotalAmount)
 
         setSplitters(prev => prev.filter((_, i) => i !== index));
-    };;
+    };
 
-    const handleSplitterIdChange = async (index: number, id: string) => {
+    const handleUpdateSplitter = async (index: number) => {
         const updated = [...splitters];
-        updated[index].id = id;
+        const code = updated[index].code;
 
         try {
-            const profile = await getContactInfor(id);
-            updated[index].profile = { id, name: profile.name || 'Not found' };
+            const profile = await getContactInfor(code);
+            updated[index].profile = { id: profile.userId || '', name: profile.name || 'Not found' };
         } catch (err) {
             // console.error("Error fetching profile:", err);
-            updated[index].profile = { id, name: 'Not found' };
+            updated[index].profile = { id: '', name: 'Not found' };
+        }
+        finally {
+            updated[index].canUpdated = true;
+            setSplitters(updated);
+        }
+    }
+
+    const handleSplitterCodeChange = async (index: number, code: string) => {
+        const updated = [...splitters];
+        updated[index].code = code;
+
+        if (updated[index].canUpdated) {
+            updated[index].canUpdated = false;
+            setTimeout(() => handleUpdateSplitter(index), 1000);
         }
 
         setSplitters(updated);
@@ -99,7 +114,7 @@ export default function PayBillPage() {
                 name: contractName,
                 contractPayer: userId,
                 contractSplitters: splitters.map(splitter => ({
-                    userId: splitter.id,
+                    userId: splitter.profile?.id || '',
                     itemList: [{
                         itemName: "Money",
                         itemPrice: parseInt(splitter.amount || '0', 10)
@@ -156,18 +171,18 @@ export default function PayBillPage() {
                         <Feather name="x-circle" size={28} color="black" />
                     </Pressable>
 
-                    <Text className="text-sm font-medium text-gray-700 mb-1">Splitter ID</Text>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Splitter Code</Text>
 
                     <TextInput
-                        value={splitter.id}
-                        onChangeText={(id) => handleSplitterIdChange(index, id)}
-                        placeholder="Splitter ID"
+                        value={splitter.code}
+                        onChangeText={(code) => handleSplitterCodeChange(index, code)}
+                        placeholder="Splitter Code"
                         className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-base mb-2"
                     />
 
                     <View className="w-['95%'] px-4 min-h-[80px] self-end">
                         {splitter.profile?.id ? (
-                            <ProfileCard name={splitter.profile.name} id={splitter.id} />
+                            <ProfileCard name={splitter.profile.name} id={splitter.profile.id} />
                         ) : (
                             <Text className="text-sm text-gray-400">No user found</Text>
                         )}

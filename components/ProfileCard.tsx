@@ -9,7 +9,7 @@ interface ProfileCardProps {
 export default function ProfileCard({ name, id }: ProfileCardProps) {
     const onPress = () => {
         //show popup
-        console.log("profile pressed:", name, id);
+        // console.log("profile pressed:", name, id);
     }
 
     return (

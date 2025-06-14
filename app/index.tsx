@@ -1,7 +1,7 @@
 import { Text, View } from "react-native";
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { deleteSecurely, fetchSecurely } from "@/utils/storage";
+import { deleteSecurely, fetchSecurely, clearUserStorage } from "@/utils/storage";
 import { getAccountInfor } from "@/services/account";
 
 export default function Index() {
@@ -21,7 +21,8 @@ export default function Index() {
                     
                     // Handle token expiration or invalid token
                     console.error("Error fetching account information:", error);
-                    deleteSecurely('token');
+                    await deleteSecurely('token');
+                    await clearUserStorage();
                     router.replace('/auth/login');
                     return;
                 }
@@ -31,6 +32,7 @@ export default function Index() {
             } else {
 
                 // No token, go to login
+                await clearUserStorage();
                 router.replace('/auth/login');
             }
         };

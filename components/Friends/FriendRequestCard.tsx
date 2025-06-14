@@ -43,7 +43,7 @@ export default function FriendRequestCard({
                     className="bg-red-100 px-3 py-1.5 rounded-full flex-row items-center"
                 >
                     <Feather name="x" size={16} color="#DC2626" />
-                    <Text className="text-red-600 ml-1 text-sm font-medium">Deny</Text>
+                    <Text className="text-red-600 ml-1 text-sm font-medium">Decline</Text>
                 </Pressable>
                 <Pressable
                     onPress={handleAcceptRequest}
