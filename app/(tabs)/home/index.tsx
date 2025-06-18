@@ -32,11 +32,17 @@ export default function HomeTabScreen() {
     const router = useRouter();
 
     const handleContractMakingFunction = () => {
-        router.push('/contracts/make');
+        router.push({
+            pathname: '/contracts/[mode]/make',
+            params: { mode: 'normal' },
+        });
     }
 
     const handlePayBillFunction = () => {
-        router.push('/contracts/bill');
+        router.push({
+            pathname: '/contracts/[mode]/make',
+            params: { mode: 'normal' },
+        });
     }
 
     const handleHangOutFunction = () => {

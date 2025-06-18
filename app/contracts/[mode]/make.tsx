@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import ProfileCard from '@/components/ProfileCard';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { makeContract } from '@/services/contract';
+import { makeHangoutContract } from '@/services/hangoutContract';
 import { fetchSecurely } from '@/utils/storage';
 import { getContactInfor } from '@/services/account';
 import { useToast } from '@/components/ToastContext';
@@ -16,7 +17,18 @@ type IProfileType = {
 
 export default function ContractMakingPage() {
     const router = useRouter();
+    const { mode } = useLocalSearchParams();
+    const { showToast } = useToast();
 
+    const allowedModes = ['normal', 'hangout'] as const;
+    type Mode = typeof allowedModes[number];
+
+    if (!allowedModes.includes(mode as Mode)){
+        showToast("Something went wrong, try again later", { type: "error" });
+        router.back();
+    }
+
+    //Input form
     const [otherCode, setOtherCode] = useState('');
     const debouncedCode = useDebouncedValue(otherCode, 400);
     const [otherProfile, setOtherProfile] = useState<IProfileType>({ name: '', id: '' });
@@ -52,8 +64,6 @@ export default function ContractMakingPage() {
     const [description, setDescription] = useState('');
     
     const [userId, setUserId] = useState("");
-
-    const { showToast } = useToast();
     
     useEffect(() => {
         const fetchUserId = async () => {
@@ -73,18 +83,33 @@ export default function ContractMakingPage() {
         setAmount(amt);
     }
 
+
+    //Make logic
     const handleMakeContract = async () => {
         if (!amount)    return;
+        if (userId === otherProfile.id) return;
+        
         try {
             const fromId    = contractType === 'lend' ? userId : otherProfile.id;
             const toId      = contractType === 'lend' ? otherProfile.id : userId;
-            await makeContract({
-                name: contractName,
-                fromId: fromId,
-                toId: toId,
-                amount: parseInt(amount, 10),
-                description: description
-            });
+
+            if (mode === "normal"){
+                await makeContract({
+                    name: contractName,
+                    fromId: fromId,
+                    toId: toId,
+                    amount: parseInt(amount, 10),
+                    description: description
+                });
+            } else if (mode === "hangout"){
+                await makeHangoutContract({
+                    name: contractName,
+                    fromId: fromId,
+                    toId: toId,
+                    amount: parseInt(amount, 10),
+                    description: description
+                });
+            }
 
             showToast('Contract created successfully!', { type: 'success' });
         router.back();

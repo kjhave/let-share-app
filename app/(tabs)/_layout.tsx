@@ -4,7 +4,7 @@ import { SlideTabBar, type TabItem } from "@/components/SlideTabBar";
 const tabItems: TabItem[] = [
     { name: "home/index", icon: "home", label: "Home" },
     { name: "friends/index", icon: "users", label: "Friends" },
-    { name: "groups/index", icon: "layers", label: "Groups" },
+    { name: "log/index", icon: "file-text", label: "Log" },
     { name: "profile/index", icon: "user", label: "Profile" },
 ];
 

@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import ProfileCard from '@/components/ProfileCard';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { fetchSecurely } from '@/utils/storage';
 import { useToast } from '@/components/ToastContext';
 import { makeBillShare } from '@/services/contract';
 import { getContactInfor } from '@/services/account';
+import { makeHangoutBillShare } from '@/services/hangoutContract';
 
 type IProfileType = {
     name: string;
@@ -22,6 +23,11 @@ type ISplitter = {
 
 export default function PayBillPage() {
     const router = useRouter();
+     const { mode } = useLocalSearchParams();
+    const { showToast } = useToast();
+
+    const allowedModes = ['normal', 'hangout'] as const;
+    type Mode = typeof allowedModes[number];
 
     const [contractName, setContractName] = useState('');
     const [userAmount, setUserAmount] = useState('');
@@ -30,7 +36,6 @@ export default function PayBillPage() {
     const [description, setDescription] = useState('');
 
     const [userId, setUserId] = useState("");
-    const { showToast } = useToast();
     
     useEffect(() => {
         const fetchUserId = async () => {
@@ -110,18 +115,41 @@ export default function PayBillPage() {
 
     const handleMakeBillShare = async () => {
         try {
-            await makeBillShare({
-                name: contractName,
-                contractPayer: userId,
-                contractSplitters: splitters.map(splitter => ({
-                    userId: splitter.profile?.id || '',
+            const payerAmount = parseInt(userAmount || '0', 10);
+            const contractSplitters = splitters.map(splitter => ({
+                userId: splitter.profile?.id || '',
+                itemList: [{
+                    itemName: "Money",
+                    itemPrice: parseInt(splitter.amount || '0', 10)
+                }]
+            }));
+
+            if (payerAmount > 0)
+                contractSplitters.push({
+                    userId: userId,
                     itemList: [{
                         itemName: "Money",
-                        itemPrice: parseInt(splitter.amount || '0', 10)
+                        itemPrice: payerAmount
                     }]
-                })),
-                description
-            });
+                });
+            
+            if (mode === "normal" ){
+                await makeBillShare({
+                    name: contractName,
+                    contractPayer: userId,
+                    contractSplitters: contractSplitters,
+                    description,
+                    totalAmount: totalAmount
+                });
+            } else if (mode === "hangout"){
+                await makeHangoutBillShare({
+                    name: contractName,
+                    contractPayer: userId,
+                    contractSplitters: contractSplitters,
+                    description,
+                    totalAmount: totalAmount
+                });
+            }
 
             showToast("Bill share created successfully", { type: 'success' });
             router.back();

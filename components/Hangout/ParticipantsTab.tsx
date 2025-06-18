@@ -1,56 +1,29 @@
-import { View, Text } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
-import { useEffect, useState } from 'react';
+import { View, Text, Pressable, ScrollView } from 'react-native';
+
+import { Feather } from '@expo/vector-icons';
 
 // services
-import { getHangoutParticipants, type HangoutParticipant, getUserHangoutStatus } from '@/services/hangout';
+import { type HangoutParticipant } from '@/services/hangout';
 import ParticipantCard from '../ProfileCard';
-import { fetchSecurely } from '@/utils/storage';
 
-export default function ParticipantsTab() {
-    const [participants, setParticipants] = useState<HangoutParticipant[]>([]);
-    const [userId, setUserId] = useState<{id: string, name: string}|null>(null);
-
-    const fetchParticipants = async (): Promise<void> => {
-        try {
-            const code = await getUserHangoutStatus();
-
-            if (!code) {
-                throw new Error("No hangout code found");
-            }
-
-            const friends = await getHangoutParticipants(code);
-            setParticipants(friends);
-        } catch (error) {
-            console.error("Error fetching participant list:", error);
-        }
-    };
-
-    useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const user = { id: '', name: '' };
-                user.id = await fetchSecurely('userId');
-                user.name = await fetchSecurely('name');
-
-                setUserId(user);
-            } catch (error) {
-                console.error("Error fetching host:", error);
-            }
-        };
-
-        fetchUser();
-        fetchParticipants();
-    }, []);
-
+export default function ParticipantsTab({
+    participants,
+    showInviteModal,
+    setShowInviteModal,
+}: {
+    participants: HangoutParticipant[],
+    showInviteModal: boolean,
+    setShowInviteModal: () => void,
+}) {
     return (
-        <View className="py-4">
+        <View className="flex-1 bg-white">
             <ScrollView
+                className="flex-1"
                 contentContainerStyle={{
                     paddingHorizontal: 16,
                     paddingTop: 16,
-                    paddingBottom: 32,
-                    width: '100%'
+                    paddingBottom: 100,
+                    width: "100%"
                 }}
                 showsVerticalScrollIndicator={false}
             >
@@ -64,6 +37,18 @@ export default function ParticipantsTab() {
                     ))
                 }
             </ScrollView>
+            
+            {!showInviteModal &&
+                <View className="absolute bottom-6 left-0 right-0 items-center">
+                    <Pressable
+                        onPress={setShowInviteModal}
+                        className="bg-blue-600 px-6 py-3 rounded-full flex-row items-center shadow-md"
+                    >
+                        <Feather name="user-plus" size={20} color="white" />
+                        <Text className="text-white ml-2 font-semibold text-base">Add User</Text>
+                    </Pressable>
+                </View>
+            }
         </View>
     );
 }

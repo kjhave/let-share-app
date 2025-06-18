@@ -1,6 +1,6 @@
 // PlaygroundPage.tsx
 import { useState, useEffect } from 'react';
-import { View, Text, Dimensions, Pressable, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, Dimensions, Pressable, TextInput } from 'react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -8,16 +8,27 @@ import Animated, {
     FadeIn,
     FadeOut,
     SlideInDown,
-    SlideOutDown
+    SlideOutDown,
+    ZoomIn,
+    ZoomOut
 } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+
+
+import PressableButton from '@/components/PressableButton';
 
 // Custom components
 import StateTabs, { TabItem } from '@/components/StateTabs';
 import ParticipantsTab from '@/components/Hangout/ParticipantsTab';
 import ContractTab from '@/components/Hangout/ContractTab';
-import { getUserHangoutStatus, leaveHangout, sendHangoutInvitation } from '@/services/hangout';
+import {
+    getUserHangoutStatus,
+    leaveHangout,
+    sendHangoutInvitation,
+    getHangoutParticipants,
+    type HangoutParticipant,
+} from '@/services/hangout';
 
 import { useToast } from '@/components/ToastContext';
 import Clipboard from 'expo-clipboard';
@@ -38,9 +49,31 @@ export default function PlaygroundPage({ hangoutName = 'Hangout Party '+'🎉' }
     const translateX = useSharedValue(0);
 
     const [showInviteModal, setShowInviteModal] = useState(false);
+    const [showMakeContract, setShowMakeContract] = useState(false);
+
     const [friendCode, setFriendCode] = useState('');
     const [friendProfile, setFriendProfile] = useState<{ id: string, name: string }>({ id: '', name: ''});
     const [hangoutCode, setHangoutCode] = useState('');
+
+    const [participants, setParticipants] = useState<HangoutParticipant[]>([]);
+
+    
+    const fetchParticipants = async (): Promise<void> => {
+        try {
+            const code = await getUserHangoutStatus();
+
+            if (!code) {
+                throw new Error("No hangout code found");
+            }
+
+            const friends = await getHangoutParticipants(code);
+            setParticipants(friends);
+        } catch (error) {
+            showToast("Couldn't fetch participants", { type: "error" });
+            console.error("Error fetching participant list:", error);
+        }
+    };
+
 
     useEffect(() => {
         const fetchHangoutCode = async () => {
@@ -60,6 +93,7 @@ export default function PlaygroundPage({ hangoutName = 'Hangout Party '+'🎉' }
         }
 
         fetchHangoutCode();
+        fetchParticipants();
     }, []);
 
     const handleTabChange = (tab: string) => {
@@ -127,6 +161,22 @@ export default function PlaygroundPage({ hangoutName = 'Hangout Party '+'🎉' }
         }
     }
 
+    const handleMakePersonalContract = () => {
+        router.push({
+            pathname: "/contracts/[mode]/make",
+            params: { mode: 'hangout' },
+        })
+        setShowMakeContract(false);
+    }
+    
+    const handleMakeBillShare = () => {
+        router.push({
+            pathname: "/contracts/[mode]/bill",
+            params: { mode: 'hangout' },
+        })
+        setShowMakeContract(false);
+    }
+
     return (
         <View className="relative flex-1 bg-white pt-12 p-4 overflow-hidden">
             <View className="flex-row items-center justify-between mb-4">
@@ -151,30 +201,28 @@ export default function PlaygroundPage({ hangoutName = 'Hangout Party '+'🎉' }
 
             <Animated.View
                 style={[{
+                    flexGrow: 1,
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     width: SCREEN_WIDTH * 2 - 16 * 2,
                 }, slidingTab]}
             >
                 <View style={{ width: SCREEN_WIDTH - 16 * 2 }}>
-                    <ParticipantsTab />
+                    <ParticipantsTab
+                        participants={participants}
+                        showInviteModal={showInviteModal}
+                        setShowInviteModal={() => setShowInviteModal(true)}
+                    />
                 </View>
                 <View style={{ width: SCREEN_WIDTH - 16 * 2 }}>
-                    <ContractTab />
+                    <ContractTab
+                        participants={participants}
+                        showMakeContract={showMakeContract}
+                        setShowMakeContract={() => setShowMakeContract(true)}
+                    />
                 </View>
             </Animated.View>
 
-            <TouchableOpacity
-                onPress={() => setShowInviteModal(true)}
-                className="
-                    flex items-center justify-center
-                    absolute bottom-5 right-5 z-20
-                    h-16 w-16 
-                    bg-blue-500 rounded-full shadow-lg
-                "
-            >
-                <Feather name="user-plus" size={24} color="white" />
-            </TouchableOpacity>
 
             {/* Invite Modal */}
             {showInviteModal && (
@@ -244,6 +292,51 @@ export default function PlaygroundPage({ hangoutName = 'Hangout Party '+'🎉' }
                         >
                             <Text className="text-white text-base font-medium">Send</Text>
                         </Pressable>
+                    </Animated.View>
+                </>
+            )}
+
+            {showMakeContract && (
+                <>
+                    {/* Overlay - static fade */}
+                    <Animated.View
+                        entering={FadeIn}
+                        exiting={FadeOut}
+                        className="absolute inset-0 bg-black/30"
+                        style={{ zIndex: 45 }}
+                    >
+                        <Pressable className="flex-1" onPress={() => setShowMakeContract(false)} />
+                    </Animated.View>
+
+                    {/* Modal content - slide up */}
+                    <Animated.View
+                        entering={ZoomIn}
+                        exiting={ZoomOut}
+                        className="absolute top-1/3 left-[5%] right-[5%] bg-white rounded-2xl p-4 max-h-[80%]"
+                        style={{ zIndex: 50 }}
+                    >
+                        <View className="flex-row justify-between items-center mb-4">
+                            <Text className="text-lg font-semibold">Choose type</Text>
+                            <Pressable onPress={() => setShowMakeContract(false)}>
+                                <Feather name="x" size={24} color="black" />
+                            </Pressable>
+                        </View>
+
+                        <View
+                            className='flex-1 gap-4'
+                        >
+                                <PressableButton
+                                    title="Contract"
+                                    onPress={handleMakePersonalContract}
+                                    bgColor='#0D3B66'
+                                    textColor='#fff'
+                                />
+
+                                <PressableButton
+                                    title="Bill share"
+                                    onPress={handleMakeBillShare}
+                                />
+                        </View>
                     </Animated.View>
                 </>
             )}

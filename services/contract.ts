@@ -43,7 +43,8 @@ export const makeContract = async ({
                         itemPrice:amount
                     }]
                 }],
-                contractDescription: description
+                contractDescription: description,
+                contractTotalCost: amount,
             })
         });
 
@@ -60,6 +61,7 @@ export const makeContract = async ({
     }
     catch (error){
         console.log("Error making contract:", error);
+        throw error;
     }
 }
 
@@ -67,12 +69,14 @@ export const makeBillShare = async ({
     name = "",
     contractPayer,
     contractSplitters = [],
-    description = ""
+    description = "",
+    totalAmount,
 }: {
     name: string,
     contractPayer: string,
     contractSplitters: { userId: string, itemList: { itemName: string, itemPrice: number }[] }[],
-    description?: string
+    description?: string,
+    totalAmount: number,
 }): Promise<void> => {
     try {
         const token = await fetchSecurely("token");
@@ -90,7 +94,8 @@ export const makeBillShare = async ({
                 contractName: name,
                 contractPayer: contractPayer,
                 contractSplitters: contractSplitters,
-                contractDescription: description
+                contractDescription: description,
+                contractTotalCost: totalAmount
             })
         });
 
@@ -107,5 +112,6 @@ export const makeBillShare = async ({
     }
     catch (error){
         console.log("Error making bill share:", error);
+        throw error;
     }
 }
