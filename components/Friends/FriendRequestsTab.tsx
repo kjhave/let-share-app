@@ -1,7 +1,7 @@
-import { View, Text } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/ToastContext';
+import { Feather } from '@expo/vector-icons';
 
 // services
 import { acceptFriendRequest, denyFriendRequest, getFriendRequests, type FriendRequest } from '@/services/friends';
@@ -11,16 +11,16 @@ export default function FriendRequestsTabs() {
     const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
     const { showToast } = useToast();
     
-    useEffect(() => {
-        const fetchFriendRequests = async (): Promise<void> => {
-            try {
-                const friendRequests = await getFriendRequests();
-                setFriendRequests(friendRequests);
-            } catch (error) {
-                console.error("Error fetching friend request list:", error);
-            }
-        };
+    const fetchFriendRequests = async (): Promise<void> => {
+        try {
+            const friendRequests = await getFriendRequests();
+            setFriendRequests(friendRequests);
+        } catch (error) {
+            console.error("Error fetching friend request list:", error);
+        }
+    };
 
+    useEffect(() => {
         fetchFriendRequests();
     }, []);
 
@@ -29,6 +29,7 @@ export default function FriendRequestsTabs() {
             await acceptFriendRequest(friendId);
 
             showToast("Friend request accepted", { title: "Friend Request", type: 'success' });
+            await fetchFriendRequests();
         }
         catch(error){
             showToast("Failed to accept friend request", { title: "Friend Request", type: 'error' });
@@ -41,6 +42,7 @@ export default function FriendRequestsTabs() {
             await denyFriendRequest(friendId);
 
             showToast("Friend request denied", { title: "Friend Request", type: 'success' });
+            await fetchFriendRequests();
         }
         catch(error){
             showToast("Failed to deny friend request", { title: "Friend Request", type: 'error' });
@@ -50,6 +52,15 @@ export default function FriendRequestsTabs() {
 
     return (
         <View className="py-4">
+            <View className="w-full flex items-end" >
+                <Pressable
+                    onPress={fetchFriendRequests}
+                    className="rounded-full z-20 bg-gray-100"
+                >
+                    <Feather name="repeat" size={20} color="#333" />
+                </Pressable>
+            </View>
+
             <ScrollView
                 contentContainerStyle={{
                     paddingHorizontal: 16,

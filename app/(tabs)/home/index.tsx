@@ -67,7 +67,8 @@ export default function HomeTabScreen() {
 
     const [showFinancialRelationship, setShowFinancialRelationship] = useState(false);
 
-    const handleShowFinancialRelationship = () => {
+    const handleShowFinancialRelationship = async () => {
+        await fetchUserfinancialRelationships();
         setShowFinancialRelationship(true);
     }
 

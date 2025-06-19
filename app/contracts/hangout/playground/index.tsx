@@ -31,7 +31,7 @@ import {
 } from '@/services/hangout';
 
 import { useToast } from '@/components/ToastContext';
-import Clipboard from 'expo-clipboard';
+import * as Clipboard from 'expo-clipboard';
 import { getContactInfor } from '@/services/account';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;

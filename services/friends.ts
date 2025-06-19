@@ -20,12 +20,6 @@ export type Friend = {
 
 export const getFriends = async (): Promise<Friend[]> => {
     try {
-        const friends = await getFromStorage('user_friends');
-
-        if (friends !== null && Array.isArray(friends)){
-            return friends;
-        }
-
         const token = await fetchSecurely("token");
         if (!token) {
             throw new Error("No token found in secure storage");
@@ -60,8 +54,6 @@ export const getFriends = async (): Promise<Friend[]> => {
             }
         });
 
-        await saveToStorage('user_friends', data);
-
         return data;
     } catch (error) {
         console.error("Error fetching friend list:", error);
@@ -76,12 +68,6 @@ export type FriendRequest = {
 
 export const getFriendRequests = async (): Promise<FriendRequest[]> => {
     try {
-        const friendRequests = await getFromStorage('user_friendRequests');
-
-        if (friendRequests !== null && Array.isArray(friendRequests)){
-            return friendRequests;
-        }
-
         const token = await fetchSecurely("token");
         if (!token) {
             throw new Error("No token found in secure storage");
@@ -115,8 +101,6 @@ export const getFriendRequests = async (): Promise<FriendRequest[]> => {
                 throw new Error("Failed to fetch friend requests");
             }
         });
-
-        await saveToStorage('user_friendRequests', data);
 
         return data;
     } catch (error) {

@@ -1,6 +1,6 @@
-import { View, Text } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
+import { Feather } from '@expo/vector-icons';
 
 // services
 import { getFriends, type Friend } from '@/services/friends';
@@ -9,21 +9,30 @@ import FriendCard from '../ProfileCard';
 export default function FriendsTab() {
     const [friends, setFriends] = useState<Friend[]>([]);
 
-    useEffect(() => {
-        const fetchFriends = async (): Promise<void> => {
-            try {
-                const friends = await getFriends();
-                setFriends(friends);
-            } catch (error) {
-                console.error("Error fetching friend list:", error);
-            }
-        };
+    const fetchFriends = async (): Promise<void> => {
+        try {
+            const friends = await getFriends();
+            setFriends(friends);
+        } catch (error) {
+            console.error("Error fetching friend list:", error);
+        }
+    };
 
+    useEffect(() => {
         fetchFriends();
     }, []);
 
     return (
         <View className="py-4">
+            <View className="w-full flex items-end" >
+                <Pressable
+                    onPress={fetchFriends}
+                    className="rounded-full z-20 bg-gray-100"
+                >
+                    <Feather name="repeat" size={20} color="#333" />
+                </Pressable>
+            </View>
+
             <ScrollView
                 contentContainerStyle={{
                     paddingHorizontal: 16,

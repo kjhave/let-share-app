@@ -245,7 +245,16 @@ export default function HangOutEntryPage() {
                         </Pressable>
 
                         {/* Pending Invitations */}
-                        <Text className="text-sm font-medium text-gray-700 mb-2">Pending Join Requests</Text>
+                        <View className='flex flex-row justify-between items-center'>
+                            <Text className="text-sm font-medium text-gray-700 mb-2">Pending Join Requests</Text>
+                            <Pressable
+                                onPress={fetchInvitations}
+                                className="rounded-full z-20 bg-gray-100"
+                            >
+                                <Feather name="repeat" size={20} color="#333" />
+                            </Pressable>
+                        </View>
+
                         <ScrollView className="max-h-[180px] px-2 -mx-2">
                             {joinInvitations.length === 0 ? (
                                 <Text className="text-gray-400">No invitations found</Text>
