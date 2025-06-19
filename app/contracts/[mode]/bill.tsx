@@ -9,17 +9,7 @@ import { makeBillShare } from '@/services/contract';
 import { getContactInfor } from '@/services/account';
 import { makeHangoutBillShare } from '@/services/hangoutContract';
 
-type IProfileType = {
-    name: string;
-    id: string;
-};
-
-type ISplitter = {
-    code: string;
-    profile: IProfileType | null;
-    amount: string;
-    canUpdated: boolean;
-};
+import ContractSplitterForm, { type IContractSplitter} from '@/components/ContractSplitterForm';
 
 export default function PayBillPage() {
     const router = useRouter();
@@ -30,8 +20,7 @@ export default function PayBillPage() {
     type Mode = typeof allowedModes[number];
 
     const [contractName, setContractName] = useState('');
-    const [userAmount, setUserAmount] = useState('');
-    const [splitters, setSplitters] = useState<ISplitter[]>([]);
+    const [splitters, setSplitters] = useState<IContractSplitter[]>([]);
     const [totalAmount, setTotalAmount] = useState(0);
     const [description, setDescription] = useState('');
 
@@ -53,85 +42,37 @@ export default function PayBillPage() {
     const addSplitter = () => {
         setSplitters(prev => [
             ...prev,
-            { id: '', profile: null, amount: '' , code: '', canUpdated: true }
+            { userId: '', itemList: [], amount: 0 }
         ]);
     };
 
+    const handleSetSplitter = (splitter: IContractSplitter, idx: number) => {
+        const updated = [...splitters];
+        setTotalAmount(totalAmount - updated[idx].amount + splitter.amount);
+
+        updated[idx] = splitter;
+
+        setSplitters(updated);
+    }
+
     const removeSplitter = (index: number) => {
-        const newTotalAmount = totalAmount - parseInt(splitters[index].amount || '0', 10);
+        const newTotalAmount = totalAmount - splitters[index].amount;
         setTotalAmount(newTotalAmount)
 
         setSplitters(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleUpdateSplitter = async (index: number) => {
-        const updated = [...splitters];
-        const code = updated[index].code;
-
-        try {
-            const profile = await getContactInfor(code);
-            updated[index].profile = { id: profile.userId || '', name: profile.name || 'Not found' };
-        } catch (err) {
-            // console.error("Error fetching profile:", err);
-            updated[index].profile = { id: '', name: 'Not found' };
-        }
-        finally {
-            updated[index].canUpdated = true;
-            setSplitters(updated);
-        }
-    }
-
-    const handleSplitterCodeChange = async (index: number, code: string) => {
-        const updated = [...splitters];
-        updated[index].code = code;
-
-        if (updated[index].canUpdated) {
-            updated[index].canUpdated = false;
-            setTimeout(() => handleUpdateSplitter(index), 1000);
-        }
-
-        setSplitters(updated);
-    };
-
-    const handleUserAmountChange = (amt: string) => {
-        if (!(/^(0|[1-9][0-9]*)?$/.test(amt)))   return;
-
-        const newTotalAmount = totalAmount + parseInt(amt || '0', 10) - parseInt(userAmount || '0', 10);
-        setTotalAmount(newTotalAmount);
-        
-        setUserAmount(amt);
-    }
-
-    const handleSplitterAmountChange = (index: number, amt: string) => {
-        if (!(/^(0|[1-9][0-9]*)?$/.test(amt)))   return;
-        const updated = [...splitters];
-
-        const newTotalAmount = totalAmount + parseInt(amt || '0', 10) - parseInt(updated[index].amount || '0', 10);
-        setTotalAmount(newTotalAmount);
-        
-        updated[index].amount = amt;
-        setSplitters(updated);
-    };
-
     const handleMakeBillShare = async () => {
         try {
-            const payerAmount = parseInt(userAmount || '0', 10);
             const contractSplitters = splitters.map(splitter => ({
-                userId: splitter.profile?.id || '',
-                itemList: [{
-                    itemName: "Money",
-                    itemPrice: parseInt(splitter.amount || '0', 10)
-                }]
+                userId: splitter.userId || '',
+                itemList: splitter.itemList.map(item => {
+                    return {
+                        itemName: item.itemName,
+                        itemPrice: parseInt(item.itemPrice || "0", 10),
+                    };
+                }),
             }));
-
-            if (payerAmount > 0)
-                contractSplitters.push({
-                    userId: userId,
-                    itemList: [{
-                        itemName: "Money",
-                        itemPrice: payerAmount
-                    }]
-                });
             
             if (mode === "normal" ){
                 await makeBillShare({
@@ -175,57 +116,19 @@ export default function PayBillPage() {
                 onChangeText={setContractName}
             />
 
-            {/* Payer */}
-            <Text className="text-sm font-medium text-gray-700 mb-1">Your Amount</Text>
-            <TextInput
-                value={userAmount}
-                onChangeText={handleUserAmountChange}
-                keyboardType="numeric"
-                className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-base mb-4"
-            />
-
             {/* Splitters Section */}
-            <Text className="text-base font-medium mb-2">Other splitters</Text>
+            <Text className="text-base font-medium mb-2">Splitters</Text>
+            <Text className="text-xs text-gray-500 mb-4">
+                *Including yourself
+            </Text>
 
             {splitters.map((splitter, index) => (
-                <View
+                <ContractSplitterForm
                     key={index}
-                    className="relative w-[94%] self-center bg-gray-50 border border-gray-200 rounded-xl px-4 pb-3 pt-6 mb-3"
-                >
-                    <Pressable
-                        onPress={() => removeSplitter(index)}
-                        className="absolute right-2 top-2 z-10"
-                    >
-                        <Feather name="x-circle" size={28} color="black" />
-                    </Pressable>
-
-                    <Text className="text-sm font-medium text-gray-700 mb-1">Splitter Code</Text>
-
-                    <TextInput
-                        value={splitter.code}
-                        onChangeText={(code) => handleSplitterCodeChange(index, code)}
-                        placeholder="Splitter Code"
-                        className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-base mb-2"
-                    />
-
-                    <View className="w-['95%'] px-4 min-h-[80px] self-end">
-                        {splitter.profile?.id ? (
-                            <ProfileCard name={splitter.profile.name} id={splitter.profile.id} />
-                        ) : (
-                            <Text className="text-sm text-gray-400">No user found</Text>
-                        )}
-                    </View>
-
-                    <Text className="text-sm font-medium text-gray-700 mb-1">Splitter Amount</Text>
-
-                    <TextInput
-                        value={splitter.amount}
-                        onChangeText={(amt) => handleSplitterAmountChange(index, amt)}
-                        keyboardType="numeric"
-                        placeholder="Amount"
-                        className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-base mt-2"
-                    />
-                </View>
+                    splitter={splitter}
+                    setSplitter={(splitter: IContractSplitter) => handleSetSplitter(splitter, index)}
+                    removeSplitter={() => removeSplitter(index)}
+                />
             ))}
 
             {/* + Add Splitter */}
