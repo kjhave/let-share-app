@@ -164,6 +164,19 @@ export default function ContractTab({
         }
     }
 
+    const handleCalculateToltal = (
+        splitter: {
+            userId: string;
+            userName: string;
+            itemList: Array<{
+                itemName: string;
+                itemPrice: number;
+            }>
+        }
+    ): number => {
+        return splitter.itemList.reduce((sum, item) => sum += item.itemPrice, 0);
+    }
+
     return (
         <View className="flex-1 bg-white">
             <ScrollView
@@ -277,8 +290,6 @@ export default function ContractTab({
                             <Text>Id: {detailContract.contractPayer}</Text>
                         </View>
 
-                        <Text className="text-lg font-semibold max-w-full">Total: {detailContract.contractTotalCost}</Text>
-
                         <Text className="text-lg font-semibold mb-1 max-w-full">Splitters: </Text>
 
                         {detailContract.contractSplitters.map((splitter, idx) => {
@@ -295,15 +306,27 @@ export default function ContractTab({
                                         return (
                                             <View
                                                 key={itemId}
+                                                className={"flex flex-row justify-between"}
                                             >
                                                 <Text>{item.itemName}</Text>
                                                 <Text>{item.itemPrice}</Text>
                                             </View>
                                         );
                                     })}
+
+                                    <View
+                                        className={"flex flex-row justify-between"}
+                                    >
+                                        <Text>Total:</Text>
+                                        <Text>{handleCalculateToltal(splitter)}</Text>
+                                    </View>
+
+                                    <View className="h-px bg-black mt-4 mb-8" />
                                 </View>
                             );
                         })}
+
+                        <Text className="text-lg font-semibold max-w-full">Total: {detailContract.contractTotalCost}</Text>
 
                         <Text className="text-lg font-semibold max-w-full mb-1">Description</Text>
                         <Text
