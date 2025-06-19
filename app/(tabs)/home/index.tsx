@@ -56,7 +56,7 @@ export default function HomeTabScreen() {
 
     const handlePayBillFunction = () => {
         router.push({
-            pathname: '/contracts/[mode]/make',
+            pathname: '/contracts/[mode]/bill',
             params: { mode: 'normal' },
         });
     }
