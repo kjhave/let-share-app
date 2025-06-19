@@ -165,3 +165,44 @@ export const getContractLog = async (): Promise<IContractLog[]> => {
         throw error;
     }
 }
+
+export type financialLinkedUserType = {
+    userId: string,
+    name: string,
+    amount: number
+}
+
+export const getFinancialRelationshipList = async (): Promise<financialLinkedUserType[]> => {
+    try {
+        const token = await fetchSecurely("token");
+        if (!token) {
+            throw new Error("No token found in secure storage");
+        }
+
+        const response = await fetch(`${SERVER_URL}/contract/list`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                // Token expired or invalid, delete it
+                await deleteSecurely("token");
+                throw new Error("Token expired or invalid.");
+            }
+
+            const data = await response.json();
+            throw new Error(`Failed to making bill share with status ${response.status}, message: ${data.message}`);
+        }
+
+        const data = await response.json();
+        return data;
+    }
+    catch (error){
+        console.log("Error making bill share:", error);
+        throw error;
+    }
+}

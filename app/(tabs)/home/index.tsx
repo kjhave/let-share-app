@@ -1,12 +1,27 @@
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
+import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { useEffect, useState } from 'react';
 import { fetchSecurely } from '@/utils/storage';
 import PressableButton from '@/components/PressableButton';
 import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+
+import { getFinancialRelationshipList, type financialLinkedUserType } from '@/services/contract';
 
 export default function HomeTabScreen() {
     const [userName, setUserName] = useState<string>("khanh");
     const [userId, setUserId] = useState<string>("#0");
+
+    const [financialRelationship, setFinancialRelationship] = useState<financialLinkedUserType[]>([]);
+
+    const fetchUserfinancialRelationships = async () => {
+        try {
+            const data = await getFinancialRelationshipList();
+            setFinancialRelationship(data);
+        } catch(err) {
+            console.log("Error fetching user finanacial relationship set: ", err);
+        }
+    }
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -22,6 +37,7 @@ export default function HomeTabScreen() {
             }
         };
 
+        fetchUserfinancialRelationships();
         fetchUser();
     }, []);
 
@@ -49,8 +65,10 @@ export default function HomeTabScreen() {
         router.push('/contracts/hangout');
     }
 
-    const handleShowFinancialRelationship = () => {
+    const [showFinancialRelationship, setShowFinancialRelationship] = useState(false);
 
+    const handleShowFinancialRelationship = () => {
+        setShowFinancialRelationship(true);
     }
 
     return (
@@ -74,6 +92,53 @@ export default function HomeTabScreen() {
 
                 <PressableButton title={"Show Financial Relationships"} onPress={handleShowFinancialRelationship} />
             </View>
+
+            {showFinancialRelationship &&
+                <Animated.View
+                    entering={SlideInDown}
+                    exiting={SlideOutDown}
+                    className="absolute border-black border-x-2 border-t-2 bottom-0 left-0 right-0 bg-white rounded-t-2xl p-4 h-full"
+                    style={{ zIndex: 100 }}
+                >
+                    <View className="flex-row justify-between items-center mb-4">
+                        <Text className="text-lg font-semibold">User finanacial relations</Text>
+                        <Pressable onPress={() => setShowFinancialRelationship(false)}>
+                            <Feather name="x" size={24} color="black" />
+                        </Pressable>
+                    </View>
+
+                    <ScrollView
+                        contentContainerStyle={{
+                            paddingTop: 16,
+                            paddingBottom: 100,
+                            paddingHorizontal: 16,
+                            width: "100%",
+                        }}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {financialRelationship.map((relation, idx) => {
+                            return (
+                                <View
+                                    key={idx}
+                                    className=""
+                                >
+                                    <Text className="text-lg font-semibold mb-1 max-w-full">User: </Text>
+                                    <View className="border border-gray-300 rounded-xl px-4 py-2 mb-4">
+                                        <Text>Name: {relation.name}</Text>
+                                        <Text>Id: {relation.userId}</Text>
+                                    </View>
+
+                                    <Text className="text-lg font-semibold mb-1 max-w-full">{relation.amount>0?"Type: Debtor":"Type: Creditor"}</Text>
+
+                                    <Text className="text-lg font-semibold mb-1 max-w-full">Amount: {Math.abs(relation.amount)}</Text>
+
+                                    <View className="h-px bg-black my-2" />
+                                </View>
+                            );
+                        })}
+                    </ScrollView>
+                </Animated.View>
+            }
         </View>
     );
 }
